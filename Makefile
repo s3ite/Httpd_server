@@ -10,7 +10,7 @@ all :
 
 check:
 	reset
-	clang-format -i src/*
+	clang-format -i src/* include/*
 	$(CC) $(CFLAGS) $(SRC) -g -o test
 
 
