@@ -21,3 +21,13 @@ struct servconfig *init_config(void)
 
     return config;
 }
+
+
+
+void print_config_parameter(struct servconfig *server)
+{
+	printf("\t\t GLOBAL\n");
+	printf("%s\n", server->global.servername);
+	
+	printf("\t\t VHOSTS\n");
+}

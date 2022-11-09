@@ -51,6 +51,40 @@ void get_vhost_tag_value(char *line, struct servconfig *config,
     }
 }
 
+struct returntype checking(struct servconfig *config)
+{
+    struct returntype returntype;
+
+    if (!config->global.pidfile)
+        returntype.errormessage =
+            "erreur lors du parsing du fichier de configuration. pidfile value";
+
+    else if (!config->vhosts->servername)
+        returntype.errormessage = "erreur lors du parsing du fichier de "
+                                  "configuration. servername value";
+
+    else if (!config->vhosts->rootdir)
+        returntype.errormessage =
+            "erreur lors du parsing du fichier de configuration. rootdir value";
+
+    else if (config->vhosts->port == -1)
+        returntype.errormessage =
+            "erreur lors du parsing du fichier de configuration. port value";
+
+    else if (!config->vhosts->ip)
+        returntype.errormessage =
+            "erreur lors du parsing du fichier de configuration. ip value";
+
+    else
+    {
+        returntype.value = 0;
+        return returntype;
+    }
+
+    returntype.value = 2;
+    return returntype;
+}
+
 struct returntype parser(char const *path, struct servconfig **serveur)
 {
     struct servconfig *config = NULL;
@@ -85,32 +119,39 @@ struct returntype parser(char const *path, struct servconfig **serveur)
     {
         returntype.value = 2;
         returntype.errormessage =
-            "erreur lors du parsing du fichier de configuration";
+            "erreur lors du parsing du fichier de configuration : global";
+        return returntype;
     }
 
-    while ((nread = getline(&line, &len, stream)) != '\n')
+    while ((nread = getline(&line, &len, stream)) != 1 && returntype.value == 0)
         get_global_tag_value(line, config, &returntype);
+
+    // saut de la ligne de separation
+    nread = getline(&line, &len, stream);
+    tmpchar = strtok(line, "[ ]");
 
     // parsing du tag vhosts
     if (strcmp(tmpchar, "vhosts") != 0)
     {
         returntype.value = 2;
         returntype.errormessage =
-            "erreur lors du parsing du fichier de configuration";
+            "erreur lors du parsing du fichier de configuration : vhosts";
+
+        return returntype;
     }
 
-    while ((nread = getline(&line, &len, stream)) != -1)
+    while ((nread = getline(&line, &len, stream)) != -1
+           && returntype.value == 0)
         get_vhost_tag_value(line, config, &returntype);
 
     // mandatory checking
-    if (!config->global.pidfile || !config->vhosts->servername
-        || !config->vhosts->rootdir || config->vhosts->port == -1
-        || !config->vhosts->ip)
-    {
-        returntype.value = 2;
-        returntype.errormessage = "erreur lors du parsing du fichier de "
-                                  "configuration. missing mandatory value";
-    }
+    returntype = checking(config);
+    if (returntype.value == 2)
+    	return returntype;
+
+    returntype.errormessage = "Parsing done well";
+
+
 
     free(line);
     fclose(stream);
