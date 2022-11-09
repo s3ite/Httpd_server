@@ -1,17 +1,17 @@
 CC = gcc
-SRC = src/
-INCLUDE = 
-DEPS = 
-CFLAGS = -Wall -std=c99 -pedantic -Werror -Wall -Wextra -Wvla
+INC_DIR = include
+SRC = src/socket-handler/socket-handler.c src/main.c src/parser/parser.c 
+CFLAGS = -I$(INC_DIR) -Wall -std=c99 -pedantic -Werror -Wall -Wextra -Wvla -g
 
 all : 
-	clang-format -i src/*
+	reset
+	clang-format -i src/*/*
 	$(CC) $(CFLAGS) $(SRC) -o httpd
 
 check:
 	reset
 	clang-format -i src/* include/*
-	$(CC) $(CFLAGS) $(SRC) -g -o test
+	$(CC) $(CFLAGS) $(SRC) -o test
 
 
 # delete commands  

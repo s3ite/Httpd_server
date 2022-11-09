@@ -1,16 +1,19 @@
 #include "main.h"
 
+struct servconfig *config = NULL;
 
-int main(int argc, char const *argv[])
-{
-	// appel du parseur avec les arguments d'executable
-	if ((struct returntype returntype = parse_argument(argv)).value == 2)
-	{
-		perror(returntype.errormessage);
-		return returntype.value;
-	}
-
-
+int main(int argc, char const *argv[]) {
+	(void) argc;
 	
-	return 0;
+	// /!\ to modify
+	const char *path = argv[1];
+
+  	// appel du parseur avec les arguments d'executable
+	struct returntype returntype = parser(path, &config);
+  if (returntype.value == 2) {
+    perror(returntype.errormessage);
+    return returntype.value;
+  }
+
+  return 0;
 }

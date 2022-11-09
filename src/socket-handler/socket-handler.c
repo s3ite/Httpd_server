@@ -1,11 +1,23 @@
 #include "socket-handler.h"
+
 #include "tools.h"
 
-
-
-
-struct returntype update_serveur_configuration(struct servconfig *serv, char * configfile)
+struct servconfig *init_config(void)
 {
-	// appel du parseur et modification des parametres de configuration
+    struct servconfig *config = malloc(sizeof(struct servconfig));
+    config->vhosts = malloc(sizeof(struct vhost));
 
+    config->global.logfile = NULL;
+    config->global.log = false;
+    config->global.pidfile = NULL;
+
+    ;
+
+    config->vhosts->servername = NULL;
+    config->vhosts->rootdir = NULL;
+    config->vhosts->defaultfile = NULL;
+    config->vhosts->ip = NULL;
+    config->vhosts->port = -1;
+
+    return config;
 }

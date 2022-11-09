@@ -1,17 +1,25 @@
 #ifndef SOCKET_HANDLER
 #define SOCKET_HANDLER
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
+
+#include "main.h"
+
 /*
-**	logfile (mandatory)
-**	log (mandatory)
-**	pidfile (mandatory)
+**	logfile : 
+**	log : 
+**	pidfile : (mandatory)
 */
 struct global
 {
 	char *logfile;
 	bool log;
 	char *pidfile;
-}
+};
 
 /*
 **	servername : (mandatory)
@@ -26,10 +34,9 @@ struct vhost
 	char *servername;
 	char *rootdir;
 	char *defaultfile; 
-	size_t port;
-	size_t ip;
-
-}
+	char *ip;
+	int port;
+};
 
 
 /*
@@ -39,7 +46,9 @@ struct vhost
 struct servconfig
 {
 	struct global global;
-	struct vhost *vhosts
-}
+	struct vhost *vhosts;
+};
+
+
 
 #endif /* SOCKET_HANDLER_H */
