@@ -1,28 +1,17 @@
-#define _GNU_SOURCE
+#ifndef MAIN_H
+#define MAIN_H
 
-#ifndef MAIN
-#define MAIN
+#include <errno.h>
+#include <stdio.h>
 
+#include "config-manager.h"
 #include "daemon-control.h"
 #include "event-handler.h"
 #include "parser.h"
+#include "request.h"
+#include "response.h"
 #include "socket-handler.h"
 #include "tools.h"
-
-#include <errno.h>
-
-#include <stdio.h>
-
-
-
-
-
-// ===========================Parser===============================
-struct servconfig *init_config(void);
-
-
-//=============================Socket==============================
-struct returntype parser(char const *path, struct servconfig **serveur);
-
+#include "unistd.h"
 
 #endif /* MAIN_H */

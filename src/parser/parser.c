@@ -1,19 +1,21 @@
 #include "parser.h"
 
-void get_global_tag_value(char *line, struct servconfig *config,
-                          struct returntype *returntype)
+struct servconfig **get_global_tag_value(char *line, struct servconfig **server,
+                                         struct returntype *returntype)
 {
-    char *tmpchar = NULL;
-    tmpchar = strtok(line, " =");
+    char *tmpchar = strtok_r(line, " =", &line);
+    char *var = strtok_r(NULL, "= \n", &line);
 
-    if (strcmp(tmpchar, "log_file"))
-        config->global.logfile = strtok(line, " ");
+    if (strcmp(tmpchar, "log_file") == 0)
+        (*server)->global.logfile =
+            var ? strcpy((*server)->global.logfile, var) : NULL;
 
-    else if (strcmp(tmpchar, "pid_file"))
-        config->global.pidfile = strtok(line, " ");
+    else if (strcmp(tmpchar, "pid_file") == 0)
+        (*server)->global.pidfile =
+            var ? strcpy((*server)->global.pidfile, var) : NULL;
 
-    else if (strcmp(tmpchar, "log"))
-        config->global.log = strcmp(strtok(line, " "), "true") ? true : false;
+    else if (strcmp(tmpchar, "log") == 0)
+        (*server)->global.log = strcmp(var, "true") == 0 ? true : false;
 
     else
     {
@@ -21,34 +23,43 @@ void get_global_tag_value(char *line, struct servconfig *config,
         returntype->errormessage =
             "erreur lors du parsing du fichier de configuration";
     }
+
+    return server;
 }
 
-void get_vhost_tag_value(char *line, struct servconfig *config,
-                         struct returntype *returntype)
+struct servconfig **get_vhost_tag_value(char *line, struct servconfig **server,
+                                        struct returntype *returntype)
 {
-    char *tmpchar = NULL;
-    tmpchar = strtok(line, " =");
+    char *tmpchar = strtok_r(line, " =", &line);
+    char *var = strtok_r(NULL, "= \n", &line);
 
-    if (strcmp(tmpchar, "server_name"))
-        config->vhosts->servername = strtok(line, " ");
+    if (strcmp(tmpchar, "server_name") == 0)
+        (*server)->vhosts->servername =
+            var ? strcpy((*server)->vhosts->servername, var) : NULL;
 
-    else if (strcmp(tmpchar, "port"))
-        config->vhosts->port = atoi(strtok(line, " ")); // to size_t
+    else if (strcmp(tmpchar, "port") == 0)
+        (*server)->vhosts->port =
+            var ? strcpy((*server)->vhosts->servername, var) : NULL;
 
-    else if (strcmp(tmpchar, "root_dir"))
-        config->vhosts->rootdir = strtok(line, " ");
+    else if (strcmp(tmpchar, "root_dir") == 0)
+        (*server)->vhosts->rootdir =
+            var ? strcpy((*server)->vhosts->rootdir, var) : NULL;
 
-    else if (strcmp(tmpchar, "default_file"))
-        config->vhosts->defaultfile = strtok(line, " ");
+    else if (strcmp(tmpchar, "default_file") == 0)
+        (*server)->vhosts->defaultfile =
+            var ? strcpy((*server)->vhosts->defaultfile, var) : "index.html";
 
-    else if (strcmp(tmpchar, "ip"))
-        config->vhosts->rootdir = strtok(line, " ");
+    else if (strcmp(tmpchar, "ip") == 0)
+        (*server)->vhosts->rootdir =
+            var ? strcpy((*server)->vhosts->ip, var) : NULL;
     else
     {
         returntype->value = 2;
         returntype->errormessage =
             "erreur lors du parsing du fichier de configuration";
     }
+
+    return server;
 }
 
 struct returntype checking(struct servconfig *config)
@@ -67,7 +78,7 @@ struct returntype checking(struct servconfig *config)
         returntype.errormessage =
             "erreur lors du parsing du fichier de configuration. rootdir value";
 
-    else if (config->vhosts->port == -1)
+    else if (!config->vhosts->port)
         returntype.errormessage =
             "erreur lors du parsing du fichier de configuration. port value";
 
@@ -85,15 +96,9 @@ struct returntype checking(struct servconfig *config)
     return returntype;
 }
 
-struct returntype parser(char const *path, struct servconfig **serveur)
+struct returntype parser(char const *path, struct servconfig **server)
 {
-    struct servconfig *config = NULL;
-    struct returntype returntype;
-
-    if (!*serveur)
-        *serveur = init_config();
-
-    config = *serveur;
+    struct returntype returntype = { .errormessage = NULL, .value = 0 };
 
     FILE *stream = NULL;
     char *line = NULL;
@@ -124,7 +129,7 @@ struct returntype parser(char const *path, struct servconfig **serveur)
     }
 
     while ((nread = getline(&line, &len, stream)) != 1 && returntype.value == 0)
-        get_global_tag_value(line, config, &returntype);
+        server = get_global_tag_value(line, server, &returntype);
 
     // saut de la ligne de separation
     nread = getline(&line, &len, stream);
@@ -142,16 +147,14 @@ struct returntype parser(char const *path, struct servconfig **serveur)
 
     while ((nread = getline(&line, &len, stream)) != -1
            && returntype.value == 0)
-        get_vhost_tag_value(line, config, &returntype);
+        server = get_vhost_tag_value(line, server, &returntype);
 
     // mandatory checking
-    returntype = checking(config);
+    returntype = checking(*server);
     if (returntype.value == 2)
-    	return returntype;
+        return returntype;
 
     returntype.errormessage = "Parsing done well";
-
-
 
     free(line);
     fclose(stream);
