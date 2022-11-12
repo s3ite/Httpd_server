@@ -1,5 +1,5 @@
-#ifndef REQUEST
-#define REQUEST
+#ifndef REQUEST_H
+#define REQUEST_H
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -13,4 +13,4 @@ struct request_info
 
 struct request_info *parser_request(char *buffer);
 
-#endif
+#endif /* REQUEST_H */

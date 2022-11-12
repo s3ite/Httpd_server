@@ -1,5 +1,5 @@
-#ifndef CONFIG_MANAGER
-#define CONFIG_MANAGER
+#ifndef CONFIG_MANAGER_H
+#define CONFIG_MANAGER_H
 
 #include <stdbool.h>
 #include <stdio.h>

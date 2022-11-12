@@ -1,5 +1,5 @@
-#ifndef RESPONSE
-#define RESPONSE
+#ifndef RESPONSE_H
+#define RESPONSE_H
 
 #include <stdio.h>
 #include <string.h>
@@ -21,4 +21,4 @@ struct response_info
 struct response_info *parser_response(struct request_info *request,
                                       struct servconfig *server);
 
-#endif
+#endif /* RESPONSE_H */

@@ -1,6 +1,5 @@
-#define _GNU_SOURCE
-#ifndef PARSER
-#    define PARSER
+#ifndef PARSER_H
+#    define PARSER_H
 
 #    include <stdbool.h>
 #    include <stdio.h>
@@ -12,4 +11,4 @@
 
 struct returntype parser(char const *path, struct servconfig **serveur);
 
-#endif /* PARSER */
+#endif /* PARSER_H */

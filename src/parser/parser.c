@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "parser.h"
 
 struct servconfig **get_global_tag_value(char *line, struct servconfig **server,

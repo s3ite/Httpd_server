@@ -1,5 +1,5 @@
-#ifndef SOCKET_HANDLER
-#define SOCKET_HANDLER
+#ifndef SOCKET_HANDLER_H
+#define SOCKET_HANDLER_H
 
 #include <fcntl.h>
 #include <netdb.h>

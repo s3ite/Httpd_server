@@ -13,4 +13,4 @@
 void stop_server(struct servconfig *server);
 struct returntype daemon_control(struct servconfig **server, const char *path,
                                  const char *command);
-#endif
+#endif /* DAEMON_CONTROL_H */
