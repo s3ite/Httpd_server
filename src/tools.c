@@ -1,3 +1,5 @@
+#define POSIX_C_SOURCE 200809L
+
 #include "tools.h"
 
 void log_request(char *servname, struct request_info *request_info,

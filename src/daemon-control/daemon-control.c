@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE
 #include "daemon-control.h"
 
 void start_server(struct servconfig *server)
@@ -5,14 +6,35 @@ void start_server(struct servconfig *server)
     socket_handler(server->vhosts->ip, server->vhosts->port, server);
 }
 
-struct returntype stop_server(struct servconfig **server)
+void stop_server(struct servconfig *server)
 {
-    struct returntype returntype;
-    (void)server;
-    returntype.message = "server launch perfectly";
-    returntype.value = 0;
+    // Recuperation et arret du serveur
+    FILE *file = fopen(server->global.pidfile, "r");
+    char *buffer = malloc(7);
+    while ((fgets(buffer, 7, file)) != NULL)
+    {
+        buffer[6] = '\0';
+        kill(strtol(buffer, NULL, 10), SIGKILL);
+    }
 
-    return returntype;
+    if (server->global.logfile)
+        remove(server->global.logfile);
+    if (server->global.pidfile)
+        remove(server->global.pidfile);
+
+    free(server->global.logfile);
+    free(server->global.pidfile);
+
+    free(server->vhosts->servername);
+    free(server->vhosts->rootdir);
+    free(server->vhosts->defaultfile);
+    free(server->vhosts->ip);
+    free(server->vhosts->port);
+
+    free(server->vhosts);
+    free(server);
+
+    exit(0);
 }
 struct returntype reload_server(struct servconfig **server)
 {

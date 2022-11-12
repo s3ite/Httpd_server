@@ -61,27 +61,27 @@ struct servconfig **get_vhost_tag_value(char *line, struct servconfig **server,
     return server;
 }
 
-struct returntype checking(struct servconfig *config)
+struct returntype checking(struct servconfig *server)
 {
     struct returntype returntype;
 
-    if (!config->global.pidfile)
+    if (!server->global.pidfile)
         returntype.message =
             "erreur lors du parsing du fichier de configuration. pidfile value";
 
-    else if (!config->vhosts->servername)
+    else if (!server->vhosts->servername)
         returntype.message = "erreur lors du parsing du fichier de "
                              "configuration. servername value";
 
-    else if (!config->vhosts->rootdir)
+    else if (!server->vhosts->rootdir)
         returntype.message =
             "erreur lors du parsing du fichier de configuration. rootdir value";
 
-    else if (!config->vhosts->port)
+    else if (!server->vhosts->port)
         returntype.message =
             "erreur lors du parsing du fichier de configuration. port value";
 
-    else if (!config->vhosts->ip)
+    else if (!server->vhosts->ip)
         returntype.message =
             "erreur lors du parsing du fichier de configuration. ip value";
 

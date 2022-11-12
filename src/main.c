@@ -1,6 +1,6 @@
 #include "main.h"
 
-struct servconfig *config = NULL;
+struct servconfig *server = NULL;
 
 int main(int argc, char const *argv[])
 {
@@ -16,7 +16,7 @@ int main(int argc, char const *argv[])
             errx(2, "invalid arguments : --dry-run");
 
         path = argv[2];
-        returntype = parser(path, &config);
+        returntype = parser(path, &server);
 
         if (returntype.value == 0)
             printf("%s", returntype.message);
@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
             && strcmp(command, "restart") != 0)
             errx(2, "invalid arguments : -a");
         else
-            daemon_control(&config, path, command);
+            daemon_control(&server, path, command);
     }
 
     else

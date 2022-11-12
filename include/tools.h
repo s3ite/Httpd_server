@@ -1,13 +1,11 @@
-#define POSIX_C_SOURCE 200809L
-
 #ifndef TOOLS_H
-#    define TOOLS_H
+#define TOOLS_H
 
-#    include <stddef.h>
-#    include <stdio.h>
-#    include <time.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <time.h>
 
-#    include "request.h"
+#include "request.h"
 struct returntype
 {
     char *message;

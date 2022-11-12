@@ -14,7 +14,7 @@ struct response_info *parser_response(struct request_info *request,
     time_t timestamp = time(NULL);
     struct tm *pTime = localtime(&timestamp);
     char date[100];
-    strftime(date, 100, "Date : %a, %d %b %G %T GMT\n", pTime);
+    strftime(date, 100, "Date : %a, %d %b %G %T GMT\n\n", pTime);
     // printf("data : %s", date);
 
     printf("%s", request->version);

@@ -1,10 +1,5 @@
+#define _POSIX_C_SOURCE 200112L
 #include "socket-handler.h"
-
-#include <fcntl.h>
-#include <signal.h>
-#include <sys/sendfile.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 int create_and_bind(char *ip, char *port)
 {
@@ -64,8 +59,8 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
 
     while (1)
     {
-        // signal cath
-        // signal(SIGINT, stop_server(server));
+        //  signal catch
+        // signal(SIGINT, (void (*)(int))stop_server);
 
         int client_socket = accept(listening_sock, NULL, NULL);
         if (client_socket == -1)
@@ -122,16 +117,15 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
             total_sent += nb_sent;
         }
 
-        if (strcmp(response_info->statuscode, "200") == 0)
+        if (strcmp(request_info->method, "GET") == 0
+            && strcmp(response_info->statuscode, "200") == 0)
         {
             int fd = open(response_info->path, O_RDONLY);
             if (fd == -1)
                 return 2;
 
-            int count = 10000;
-            int contentlength = sendfile(client_socket, fd, 0, count);
+            sendfile(client_socket, fd, 0, 100000);
 
-            printf("nb character %d", contentlength);
             close(fd);
         }
 
