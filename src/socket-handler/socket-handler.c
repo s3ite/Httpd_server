@@ -74,7 +74,7 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
                > 0)
         {
             size_t index = get_index_from_buff(total_read, total_read + nb_read,
-                                               buff, '%');
+                                               buff, '\n');
             if (index != total_read + nb_read)
             {
                 total_read = index;
