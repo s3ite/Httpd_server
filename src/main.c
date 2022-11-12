@@ -4,35 +4,45 @@ struct servconfig *config = NULL;
 
 int main(int argc, char const *argv[])
 {
-    (void)argc;
-
-    char *PORT = "8080";
-    char *IP = "127.0.0.1";
-    if (!config)
-        config = init_config();
-
-    // /!\ to modify
-    const char *path = argv[1];
+    const char *path = NULL;
 
     // appel du parseur avec les arguments d'executable
-    struct returntype returntype = parser(path, &config);
-    if (returntype.value == 2)
+    struct returntype returntype;
+
+    // Dry run
+    if (strcmp(argv[1], "--dry-run") == 0)
     {
-        perror(returntype.errormessage);
+        if (argc != 3)
+            errx(2, "invalid arguments : --dry-run");
+
+        path = argv[2];
+        returntype = parser(path, &config);
+
+        if (returntype.value == 0)
+            printf("%s", returntype.message);
+        else
+            errx(returntype.value, "%s", returntype.message);
         return returntype.value;
     }
 
-    print_config_parameter(config);
+    if (strcmp(argv[1], "-a") == 0)
+    {
+        const char *command = argv[2];
+        if (argc != 4)
+            errx(2, "invalid arguments : -a");
 
-    // char buffer[100] = "GET include/main.o HTTP/1.1 \r\n";
+        path = argv[3];
 
-    // struct request_info *request_info = parser_request(buffer);
+        if (strcmp(command, "start") != 0 && strcmp(command, "stop") != 0
+            && strcmp(command, "reload") != 0
+            && strcmp(command, "restart") != 0)
+            errx(2, "invalid arguments : -a");
+        else
+            daemon_control(&config, path, command);
+    }
 
-    // printf("\n\nMethod: %s\nTarget : %s\nVersion: %s\n",
-    // request_info->method,request_info->target, request_info->version);
+    else
+        errx(2, "invalid arguments : %s", argv[1]);
 
-    // printf("\n\n%s", status_line(request_info, config));
-
-    socket_handler(IP, PORT, config);
     return 0;
 }

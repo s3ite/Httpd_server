@@ -11,6 +11,14 @@
 #include "request.h"
 #include "sys/sendfile.h"
 
-char *status_line(struct request_info *request, struct servconfig *server);
+struct response_info
+{
+    char *statuscode;
+    char *path;
+    char *statusline;
+};
+
+struct response_info *parser_response(struct request_info *request,
+                                      struct servconfig *server);
 
 #endif

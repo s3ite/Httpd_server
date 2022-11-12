@@ -20,7 +20,7 @@ struct servconfig **get_global_tag_value(char *line, struct servconfig **server,
     else
     {
         returntype->value = 2;
-        returntype->errormessage =
+        returntype->message =
             "erreur lors du parsing du fichier de configuration";
     }
 
@@ -39,7 +39,7 @@ struct servconfig **get_vhost_tag_value(char *line, struct servconfig **server,
 
     else if (strcmp(tmpchar, "port") == 0)
         (*server)->vhosts->port =
-            var ? strcpy((*server)->vhosts->servername, var) : NULL;
+            var ? strcpy((*server)->vhosts->port, var) : NULL;
 
     else if (strcmp(tmpchar, "root_dir") == 0)
         (*server)->vhosts->rootdir =
@@ -50,12 +50,11 @@ struct servconfig **get_vhost_tag_value(char *line, struct servconfig **server,
             var ? strcpy((*server)->vhosts->defaultfile, var) : "index.html";
 
     else if (strcmp(tmpchar, "ip") == 0)
-        (*server)->vhosts->rootdir =
-            var ? strcpy((*server)->vhosts->ip, var) : NULL;
+        (*server)->vhosts->ip = var ? strcpy((*server)->vhosts->ip, var) : NULL;
     else
     {
         returntype->value = 2;
-        returntype->errormessage =
+        returntype->message =
             "erreur lors du parsing du fichier de configuration";
     }
 
@@ -67,23 +66,23 @@ struct returntype checking(struct servconfig *config)
     struct returntype returntype;
 
     if (!config->global.pidfile)
-        returntype.errormessage =
+        returntype.message =
             "erreur lors du parsing du fichier de configuration. pidfile value";
 
     else if (!config->vhosts->servername)
-        returntype.errormessage = "erreur lors du parsing du fichier de "
-                                  "configuration. servername value";
+        returntype.message = "erreur lors du parsing du fichier de "
+                             "configuration. servername value";
 
     else if (!config->vhosts->rootdir)
-        returntype.errormessage =
+        returntype.message =
             "erreur lors du parsing du fichier de configuration. rootdir value";
 
     else if (!config->vhosts->port)
-        returntype.errormessage =
+        returntype.message =
             "erreur lors du parsing du fichier de configuration. port value";
 
     else if (!config->vhosts->ip)
-        returntype.errormessage =
+        returntype.message =
             "erreur lors du parsing du fichier de configuration. ip value";
 
     else
@@ -98,7 +97,10 @@ struct returntype checking(struct servconfig *config)
 
 struct returntype parser(char const *path, struct servconfig **server)
 {
-    struct returntype returntype = { .errormessage = NULL, .value = 0 };
+    struct returntype returntype = { .message = NULL, .value = 0 };
+
+    if (!*server)
+        *server = init_config();
 
     FILE *stream = NULL;
     char *line = NULL;
@@ -112,8 +114,7 @@ struct returntype parser(char const *path, struct servconfig **server)
     if (stream == NULL)
     {
         returntype.value = 2;
-        returntype.errormessage =
-            "erreur d'ouverture du fichier de configuration";
+        returntype.message = "erreur d'ouverture du fichier de configuration";
     }
 
     // parsing du tag global
@@ -123,7 +124,7 @@ struct returntype parser(char const *path, struct servconfig **server)
     if (strcmp(tmpchar, "global") != 0)
     {
         returntype.value = 2;
-        returntype.errormessage =
+        returntype.message =
             "erreur lors du parsing du fichier de configuration : global";
         return returntype;
     }
@@ -139,7 +140,7 @@ struct returntype parser(char const *path, struct servconfig **server)
     if (strcmp(tmpchar, "vhosts") != 0)
     {
         returntype.value = 2;
-        returntype.errormessage =
+        returntype.message =
             "erreur lors du parsing du fichier de configuration : vhosts";
 
         return returntype;
@@ -154,7 +155,7 @@ struct returntype parser(char const *path, struct servconfig **server)
     if (returntype.value == 2)
         return returntype;
 
-    returntype.errormessage = "Parsing done well";
+    returntype.message = "Parsing done well";
 
     free(line);
     fclose(stream);

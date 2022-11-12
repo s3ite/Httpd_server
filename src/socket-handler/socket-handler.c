@@ -1,5 +1,11 @@
 #include "socket-handler.h"
 
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/sendfile.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 int create_and_bind(char *ip, char *port)
 {
     struct addrinfo hints;
@@ -25,10 +31,10 @@ int create_and_bind(char *ip, char *port)
             break;
         close(sockfd);
     }
-    freeaddrinfo(list);
 
     if (cursor == NULL)
         return -1;
+    freeaddrinfo(list);
 
     return sockfd;
 }
@@ -40,6 +46,7 @@ size_t get_index_from_buff(size_t begin, size_t end, char *buff, char delim)
         if (buff[i] == delim)
             return i;
     }
+
     return end;
 }
 
@@ -48,13 +55,18 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
     printf("\n+++++++ Waiting for new connection ++++++++\n\n");
 
     int listening_sock = create_and_bind(ip, port);
+
     if (listening_sock == -1)
         return 2;
+
     if (listen(listening_sock, 30) == -1)
-        return 3;
+        return 2;
 
     while (1)
     {
+        // signal cath
+        // signal(SIGINT, stop_server(server));
+
         int client_socket = accept(listening_sock, NULL, NULL);
         if (client_socket == -1)
             continue;
@@ -75,6 +87,7 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
             }
             total_read += nb_read;
         }
+
         buff[total_read - 1] = '\0';
 
         if (nb_read == -1)
@@ -88,23 +101,43 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
         if (server->global.log)
         {
             // log de la request
-            log_request("localhost", request_info, ip, server->global.logfile);
+            log_request(server->vhosts->servername, request_info, ip,
+                        server->global.logfile);
 
             // log de la reponse
-            log_response("localhost", "400", ip, request_info,
+            log_response(server->vhosts->servername, "400", ip, request_info,
                          server->global.logfile);
-        }        char *bufferresponse = status_line(request_info, server);
+        }
+        struct response_info *response_info =
+            parser_response(request_info, server);
 
-        size_t lenbuff = strlen(bufferresponse);
+        size_t lenbuff = strlen(response_info->statusline);
         size_t nb_sent;
         size_t total_sent = 0;
-        while ((nb_sent = send(client_socket, bufferresponse + total_sent,
-                               lenbuff - total_sent, MSG_NOSIGNAL))
+        while ((nb_sent =
+                    send(client_socket, response_info->statusline + total_sent,
+                         lenbuff - total_sent, MSG_NOSIGNAL))
                > 0)
         {
             total_sent += nb_sent;
         }
+
+        if (strcmp(response_info->statuscode, "200") == 0)
+        {
+            int fd = open(response_info->path, O_RDONLY);
+            if (fd == -1)
+                return 2;
+
+            int count = 10000;
+            int contentlength = sendfile(client_socket, fd, 0, count);
+
+            printf("nb character %d", contentlength);
+            close(fd);
+        }
+
         close(client_socket);
     }
     return 0;
 }
+
+// GET src/main.c HTTP/1.1 %
