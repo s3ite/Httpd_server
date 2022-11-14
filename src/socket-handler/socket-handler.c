@@ -1,6 +1,8 @@
 #define _POSIX_C_SOURCE 200112L
 #include "socket-handler.h"
 
+static volatile bool runserver = true;
+
 int create_and_bind(char *ip, char *port)
 {
     struct addrinfo hints;
@@ -45,8 +47,17 @@ size_t get_index_from_buff(size_t begin, size_t end, char *buff, char delim)
     return end;
 }
 
+void signal_handler_term(int sig)
+{
+    runserver = false;
+    printf("Catch du signal : %d\n", sig);
+}
+
 int socket_handler(char *ip, char *port, struct servconfig *server)
 {
+    // signal handler
+    signal(SIGTERM, signal_handler_term);
+
     printf("\n+++++++ Waiting for new connection ++++++++\n\n");
 
     int listening_sock = create_and_bind(ip, port);
@@ -57,11 +68,8 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
     if (listen(listening_sock, 30) == -1)
         return 2;
 
-    while (1)
+    while (runserver)
     {
-        //  signal catch
-        // signal(SIGINT, (void (*)(int))stop_server);
-
         int client_socket = accept(listening_sock, NULL, NULL);
         if (client_socket == -1)
             continue;
@@ -103,6 +111,7 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
             log_response(server->vhosts->servername, "400", ip, request_info,
                          server->global.logfile);
         }
+
         struct response_info *response_info =
             parser_response(request_info, server);
 
@@ -117,8 +126,8 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
             total_sent += nb_sent;
         }
 
-        if (strcmp(request_info->method, "GET") == 0
-            && strcmp(response_info->statuscode, "200") == 0)
+        if (strcasecmp(request_info->method, "GET") == 0
+            && strcasecmp(response_info->statuscode, "200") == 0)
         {
             int fd = open(response_info->path, O_RDONLY);
             if (fd == -1)
@@ -131,7 +140,9 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
 
         close(client_socket);
     }
+    stop_server(server);
+
     return 0;
 }
 
-// GET src/main.c HTTP/1.1 %
+// GET src/main.c HTTP/1.1

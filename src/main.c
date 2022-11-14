@@ -10,7 +10,7 @@ int main(int argc, char const *argv[])
     struct returntype returntype;
 
     // Dry run
-    if (strcmp(argv[1], "--dry-run") == 0)
+    if (strcasecmp(argv[1], "--dry-run") == 0)
     {
         if (argc != 3)
             errx(2, "invalid arguments : --dry-run");
@@ -19,13 +19,16 @@ int main(int argc, char const *argv[])
         returntype = parser(path, &server);
 
         if (returntype.value == 0)
-            printf("%s", returntype.message);
+        {
+            print_config_parameter(server);
+            printf("%s\n", returntype.message);
+        }
         else
             errx(returntype.value, "%s", returntype.message);
         return returntype.value;
     }
 
-    if (strcmp(argv[1], "-a") == 0)
+    if (strcasecmp(argv[1], "-a") == 0)
     {
         const char *command = argv[2];
         if (argc != 4)
@@ -33,9 +36,10 @@ int main(int argc, char const *argv[])
 
         path = argv[3];
 
-        if (strcmp(command, "start") != 0 && strcmp(command, "stop") != 0
-            && strcmp(command, "reload") != 0
-            && strcmp(command, "restart") != 0)
+        if (strcasecmp(command, "start") != 0
+            && strcasecmp(command, "stop") != 0
+            && strcasecmp(command, "reload") != 0
+            && strcasecmp(command, "restart") != 0)
             errx(2, "invalid arguments : -a");
         else
             daemon_control(&server, path, command);

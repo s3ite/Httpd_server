@@ -3,11 +3,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "config-manager.h"
-#include "errno.h"
+#include <errno.h>
 #include "request.h"
 #include "sys/sendfile.h"
 

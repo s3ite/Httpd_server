@@ -10,17 +10,20 @@ void stop_server(struct servconfig *server)
 {
     // Recuperation et arret du serveur
     FILE *file = fopen(server->global.pidfile, "r");
-    char *buffer = malloc(7);
-    while ((fgets(buffer, 7, file)) != NULL)
+    if (file)
     {
-        buffer[6] = '\0';
-        kill(strtol(buffer, NULL, 10), SIGKILL);
-    }
+        char buffer[15];
+        while ((fgets(buffer, 7, file)) != NULL)
+        {
+            buffer[6] = '\0';
+            kill(strtol(buffer, NULL, 10), SIGKILL);
+        }
 
-    if (server->global.logfile)
-        remove(server->global.logfile);
-    if (server->global.pidfile)
-        remove(server->global.pidfile);
+        if (server->global.logfile)
+            remove(server->global.logfile);
+        if (server->global.pidfile)
+            remove(server->global.pidfile);
+    }
 
     free(server->global.logfile);
     free(server->global.pidfile);
@@ -33,8 +36,6 @@ void stop_server(struct servconfig *server)
 
     free(server->vhosts);
     free(server);
-
-    exit(0);
 }
 struct returntype reload_server(struct servconfig **server)
 {
@@ -45,16 +46,10 @@ struct returntype reload_server(struct servconfig **server)
 
     return returntype;
 }
-struct returntype restart_server(struct servconfig **server)
+void restart_server(struct servconfig **server)
 {
-    struct returntype returntype;
-
-    (void)server;
-
-    returntype.message = "server launch perfectly";
-    returntype.value = 0;
-
-    return returntype;
+    stop_server(*server);
+    start_server(*server);
 }
 
 struct returntype daemon_control(struct servconfig **server, const char *path,
@@ -64,12 +59,12 @@ struct returntype daemon_control(struct servconfig **server, const char *path,
     returntype.message = "server launch perfectly";
     returntype.value = 0;
 
-    if (strcmp(command, "start") == 0)
-    {
-        returntype = parser(path, server);
-        if (returntype.value != 0)
-            return returntype;
+    returntype = parser(path, server);
+    if (returntype.value != 0)
+        return returntype;
 
+    if (strcasecmp(command, "start") == 0)
+    {
         pid_t childpid = fork();
 
         if (childpid == 0)
@@ -85,16 +80,29 @@ struct returntype daemon_control(struct servconfig **server, const char *path,
         return returntype;
     }
 
-    else if (strcmp(command, "stop") == 0)
+    else if (strcasecmp(command, "stop") == 0)
     {
-        // recuperation du pid dans le pidfile , arret du serveur, suppression
-        // du pidfile
+        // Recuperation et arret du serveur
+        FILE *file = fopen((*server)->global.pidfile, "r");
+        if (file)
+        {
+            char buffer[7];
+            while ((fgets(buffer, 7, file)) != NULL)
+            {
+                buffer[6] = '\0';
+                kill(strtol(buffer, NULL, 10), SIGTERM);
+            }
+        }
+        // raise(SIGTERM);
+        stop_server(*server);
     }
 
-    else if (strcmp(command, "reload") == 0)
+    else if (strcasecmp(command, "reload") == 0)
     {}
-    else if (strcmp(command, "restart") == 0)
-    {}
+    else if (strcasecmp(command, "restart") == 0)
+    {
+        restart_server(server);
+    }
 
     return returntype; // will never be reached
 }

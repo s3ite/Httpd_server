@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include "../tools.h"
 /*
 **	logfile :
 **	log :
@@ -33,6 +34,7 @@ struct vhost
     char *defaultfile;
     char *ip;
     char *port;
+    struct vhost *next;
 };
 
 /*

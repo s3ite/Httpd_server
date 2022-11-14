@@ -70,6 +70,7 @@ struct returntype checking(struct servconfig *server)
         returntype.message =
             "erreur lors du parsing du fichier de configuration. pidfile value";
 
+ for (struct vhost *index = server->vhosts; index; index = index->next)    {
     else if (!server->vhosts->servername)
         returntype.message = "erreur lors du parsing du fichier de "
                              "configuration. servername value";
@@ -91,6 +92,7 @@ struct returntype checking(struct servconfig *server)
         returntype.value = 0;
         return returntype;
     }
+}
 
     returntype.value = 2;
     return returntype;
@@ -137,6 +139,10 @@ struct returntype parser(char const *path, struct servconfig **server)
     nread = getline(&line, &len, stream);
     tmpchar = strtok(line, "[ ]");
 
+    struct vhost *index = NULL;
+    do
+    {
+        index = server->vhosts
     // parsing du tag vhosts
     if (strcmp(tmpchar, "vhosts") != 0)
     {
@@ -150,6 +156,8 @@ struct returntype parser(char const *path, struct servconfig **server)
     while ((nread = getline(&line, &len, stream)) != -1
            && returntype.value == 0)
         server = get_vhost_tag_value(line, server, &returntype);
+
+    }while( ; index; index = index->next))
 
     // mandatory checking
     returntype = checking(*server);

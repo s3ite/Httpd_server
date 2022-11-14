@@ -26,14 +26,14 @@ struct response_info *parser_response(struct request_info *request,
         return response_info;
     }
 
-    if (strcmp(request->method, "GET") != 0
-        && strcmp(request->method, "HEAD") != 0)
+    if (strcasecmp(request->method, "GET") != 0
+        && strcasecmp(request->method, "HEAD") != 0)
     {
         response_info->statuscode = "405";
         statuscode = "405 Method not allowed\n";
     }
 
-    else if (strcmp(request->version, "HTTP/1.1") != 0)
+    else if (strcasecmp(request->version, "HTTP/1.1") != 0)
     {
         response_info->statuscode = "505";
         statuscode = "505 HTTP Version Not Supported\n";

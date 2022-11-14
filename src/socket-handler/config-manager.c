@@ -1,24 +1,23 @@
 #include "config-manager.h"
 
-#include "tools.h"
-
 #define SIZE 100
 struct servconfig *init_config(void)
 {
-    struct servconfig *config = malloc(sizeof(struct servconfig));
-    config->vhosts = malloc(sizeof(struct vhost));
+    struct servconfig *server = malloc(sizeof(struct servconfig));
+    server->vhosts = malloc(sizeof(struct vhost));
 
-    config->global.logfile = malloc(SIZE);
-    config->global.log = true;
-    config->global.pidfile = malloc(SIZE);
+    server->global.logfile = malloc(SIZE);
+    server->global.log = true;
+    server->global.pidfile = malloc(SIZE);
 
-    config->vhosts->servername = malloc(SIZE);
-    config->vhosts->rootdir = malloc(SIZE);
-    config->vhosts->defaultfile = malloc(SIZE);
-    config->vhosts->ip = malloc(SIZE);
-    config->vhosts->port = malloc(SIZE);
+    server->vhosts->servername = malloc(SIZE);
+    server->vhosts->rootdir = malloc(SIZE);
+    server->vhosts->defaultfile = malloc(SIZE);
+    server->vhosts->ip = malloc(SIZE);
+    server->vhosts->port = malloc(SIZE);
+    server->vhosts->next = NULL;
 
-    return config;
+    return server;
 }
 
 void print_config_parameter(struct servconfig *server)
@@ -30,13 +29,16 @@ void print_config_parameter(struct servconfig *server)
     if (server->global.pidfile)
         printf("pidfile : %s\n", server->global.pidfile);
 
-    printf("\n\tVHOSTS\n");
-    printf("servername : %s\n", server->vhosts->servername);
-    printf("rootdir : %s\n", server->vhosts->rootdir);
+    for (struct vhost *index = server->vhosts; index; index = index->next)
+    {
+        printf("\n\tVHOSTS\n");
+        printf("servername : %s\n", server->vhosts->servername);
+        printf("rootdir : %s\n", server->vhosts->rootdir);
 
-    if (server->vhosts->defaultfile)
-        printf("defaultfile : %s\n", server->vhosts->defaultfile);
+        if (server->vhosts->defaultfile)
+            printf("defaultfile : %s\n", server->vhosts->defaultfile);
 
-    printf("ip : %s\n", server->vhosts->ip);
-    printf("port : %s\n", server->vhosts->port);
+        printf("ip : %s\n", server->vhosts->ip);
+        printf("port : %s\n", server->vhosts->port);
+    }
 }

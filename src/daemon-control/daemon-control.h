@@ -4,11 +4,12 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 
-#include "parser.h"
-#include "socket-handler.h"
-#include "tools.h"
+#include "../parser/parser.h"
+#include "../socket-handler/socket-handler.h"
+#include "../tools.h"
 
 void stop_server(struct servconfig *server);
 struct returntype daemon_control(struct servconfig **server, const char *path,

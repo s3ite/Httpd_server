@@ -15,9 +15,9 @@
 #include <unistd.h>
 
 #include "config-manager.h"
-#include "daemon-control.h"
+#include "../daemon-control/daemon-control.h"
 #include "response.h"
-#include "tools.h"
+#include "../tools.h"
 
 int socket_handler(char *ip, char *port, struct servconfig *server);
 
