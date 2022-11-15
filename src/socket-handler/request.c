@@ -18,7 +18,7 @@ struct request_info *parser_request(char *buffer)
     tmp = strtok(NULL, " ");
     request_info->target = tmp ? strcpy(request_info->target, tmp) : NULL;
 
-    tmp = strtok(NULL, " \r\n");
+    tmp = strtok(NULL, " \n");
     request_info->version = tmp ? strcpy(request_info->version, tmp) : NULL;
 
     if (!request_info->version || !request_info->method

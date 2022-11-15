@@ -11,7 +11,9 @@
 #include "../socket-handler/socket-handler.h"
 #include "../tools.h"
 
+void start_server(struct servconfig *server);
 void stop_server(struct servconfig *server);
-struct returntype daemon_control(struct servconfig **server, const char *path,
+void free_server(struct servconfig *server);
+struct returntype daemon_control(struct servconfig **server,
                                  const char *command);
 #endif /* DAEMON_CONTROL_H */

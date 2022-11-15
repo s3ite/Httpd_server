@@ -35,6 +35,7 @@ struct response_info *parser_response(struct request_info *request,
 
     else if (strcasecmp(request->version, "HTTP/1.1") != 0)
     {
+        printf("%s\n", request->version);
         response_info->statuscode = "505";
         statuscode = "505 HTTP Version Not Supported\n";
     }

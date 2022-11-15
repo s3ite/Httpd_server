@@ -49,8 +49,9 @@ size_t get_index_from_buff(size_t begin, size_t end, char *buff, char delim)
 
 void signal_handler_term(int sig)
 {
+    // useless operation == (void) sig
+    sig++;
     runserver = false;
-    printf("Catch du signal : %d\n", sig);
 }
 
 int socket_handler(char *ip, char *port, struct servconfig *server)
@@ -91,7 +92,7 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
             total_read += nb_read;
         }
 
-        buff[total_read - 1] = '\0';
+        // buff[total_read - 1] = '\0';
 
         if (nb_read == -1)
         {
@@ -140,8 +141,7 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
 
         close(client_socket);
     }
-    stop_server(server);
-
+    free_server(server);
     return 0;
 }
 

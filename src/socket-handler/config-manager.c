@@ -26,19 +26,19 @@ void print_config_parameter(struct servconfig *server)
     printf("logfile : %s\n", server->global.logfile);
     printf("log : %s\n", server->global.log ? "true" : "false");
 
-    if (server->global.pidfile)
+    if (server->global.pidfile[0] != '\0')
         printf("pidfile : %s\n", server->global.pidfile);
 
     for (struct vhost *index = server->vhosts; index; index = index->next)
     {
         printf("\n\tVHOSTS\n");
-        printf("servername : %s\n", server->vhosts->servername);
-        printf("rootdir : %s\n", server->vhosts->rootdir);
+        printf("servername : %s\n", index->servername);
+        printf("rootdir : %s\n", index->rootdir);
 
-        if (server->vhosts->defaultfile)
-            printf("defaultfile : %s\n", server->vhosts->defaultfile);
+        if (index->defaultfile)
+            printf("defaultfile : %s\n", index->defaultfile);
 
-        printf("ip : %s\n", server->vhosts->ip);
-        printf("port : %s\n", server->vhosts->port);
+        printf("ip : %s\n", index->ip);
+        printf("port : %s\n", index->port);
     }
 }
