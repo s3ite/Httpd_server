@@ -8,7 +8,7 @@ CFLAGS =-Wall -std=c99 -pedantic -Werror -Wall -Wextra -Wvla -fsanitize=address 
 
 all : 
 	reset
-	clang-format -i src/*/*.c src/*.c
+	clang-format -i src/*/*.c src/*.c src/*/*.h src/*.h
 	$(CC) $(CFLAGS) $(SRC) -o httpd
 	./httpd -a start tests/test.conf
 

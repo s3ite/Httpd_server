@@ -2,7 +2,7 @@
 
 #define MAX_SIZE 100
 // return the path to the file location asked by the user
-struct request_info *parser_request(char *buffer)
+struct request_info *parser_request(char *buffer, struct vhost *vhost)
 {
     // strtok(NULL, "/n");
 
@@ -12,17 +12,26 @@ struct request_info *parser_request(char *buffer)
     request_info->target = malloc(MAX_SIZE);
     request_info->version = malloc(MAX_SIZE);
 
-    char *tmp = strtok(buffer, " ");
-    request_info->method = tmp ? strcpy(request_info->method, tmp) : NULL;
+    char *method = strtok(buffer, " ");
+    char *target = strtok(buffer, " ");
+    char *version = strtok(buffer, " \n");
 
-    tmp = strtok(NULL, " ");
-    request_info->target = tmp ? strcpy(request_info->target, tmp) : NULL;
+    if (!version)
+    {
+        version = target;
+        target = vhost->defaultfile;
+    }
 
-    tmp = strtok(NULL, " \n");
-    request_info->version = tmp ? strcpy(request_info->version, tmp) : NULL;
+    request_info->method = method ? strcpy(request_info->method, method) : NULL;
+
+    request_info->target = target ? strcpy(request_info->target, target) : NULL;
+
+    request_info->version =
+        version ? strcpy(request_info->version, version) : NULL;
 
     if (!request_info->version || !request_info->method
         || !request_info->target)
         return NULL;
+
     return request_info;
 }

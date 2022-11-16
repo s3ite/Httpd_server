@@ -3,10 +3,9 @@
 
 void start_server(struct servconfig *server)
 {
-    for (struct vhost *index = server->vhosts; index; index = index->next)
-    {
-        socket_handler(index->ip, index->port, server);
-    }
+    // for (struct vhost *index = server->vhosts; index; index = index->next)
+
+    socket_handler(server->vhosts->ip, server->vhosts->port, server);
 }
 
 void free_server(struct servconfig *server)
@@ -48,9 +47,8 @@ void stop_server(struct servconfig *server)
             remove(server->global.logfile);
         if (server->global.pidfile)
             remove(server->global.pidfile);
+        fclose(file);
     }
-
-    fclose(file);
 }
 struct returntype reload_server(struct servconfig **server)
 {

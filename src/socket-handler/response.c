@@ -2,7 +2,7 @@
 
 // connect to socket and send the response to the client
 struct response_info *parser_response(struct request_info *request,
-                                      struct servconfig *server)
+                                      struct vhost *vhost)
 {
     struct response_info *response_info = malloc(sizeof(struct response_info));
 
@@ -44,7 +44,7 @@ struct response_info *parser_response(struct request_info *request,
     {
         char *path = malloc(100);
         *path = '\0';
-        strcat(path, server->vhosts->rootdir);
+        strcat(path, vhost->rootdir);
         strcat(path, request->target);
         response_info->path = path;
 

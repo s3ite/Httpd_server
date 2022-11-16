@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "config-manager.h"
+
 struct request_info
 {
     char *method;
@@ -11,6 +14,6 @@ struct request_info
     char *version;
 };
 
-struct request_info *parser_request(char *buffer);
+struct request_info *parser_request(char *buffer, struct vhost *vhost);
 
 #endif /* REQUEST_H */
