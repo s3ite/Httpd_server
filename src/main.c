@@ -16,9 +16,11 @@ int main(int argc, char const *argv[])
     const char *path = argv[argc - 1];
     const char *command;
     bool launchdaemon = false;
-
-    // appel du parseur avec les arguments d'executable
     struct returntype returntype;
+
+    int pathtest = access(path, R_OK);
+    if (pathtest != 0)
+        return 2;
 
     // Dry run
     if (strcasecmp(argv[1], "--dry-run") == 0)
@@ -29,7 +31,7 @@ int main(int argc, char const *argv[])
         if (returntype.value == 0)
         {
             print_config_parameter(server);
-            printf("%s\n", returntype.message);
+            // printf("%s\n", returntype.message);
         }
         else
             errx(returntype.value, "%s", returntype.message);

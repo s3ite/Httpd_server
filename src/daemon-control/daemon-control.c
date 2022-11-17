@@ -50,7 +50,7 @@ void stop_server(struct servconfig *server)
         fclose(file);
     }
 }
-struct returntype reload_server(struct servconfig **server)
+static struct returntype reload_server(struct servconfig **server)
 {
     struct returntype returntype;
     (void)server;
@@ -59,7 +59,7 @@ struct returntype reload_server(struct servconfig **server)
 
     return returntype;
 }
-void restart_server(struct servconfig **server)
+static void restart_server(struct servconfig **server)
 {
     stop_server(*server);
     start_server(*server);
@@ -96,17 +96,8 @@ struct returntype daemon_control(struct servconfig **server,
 
     else if (strcasecmp(command, "reload") == 0)
     {
-        FILE *file = fopen((*server)->global.pidfile, "r");
-        if (file)
-        {
-            char buffer[7];
-            while ((fgets(buffer, 7, file)) != NULL)
-            {
-                buffer[6] = '\0';
-                kill(strtol(buffer, NULL, 10), SIGSTOP);
-            }
-        }
-        fclose(file);
+        reload_server(server);
+        free_server(*server);
     }
     else if (strcasecmp(command, "restart") == 0)
     {

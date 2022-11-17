@@ -17,7 +17,7 @@ struct response_info *parser_response(struct request_info *request,
     strftime(date, 100, "Date : %a, %d %b %G %T GMT\n\n", pTime);
     // printf("data : %s", date);
 
-    printf("%s", request->version);
+    // printf("%s", request->version);
     if (!request)
     {
         response_info->statuscode = "400";
@@ -35,7 +35,6 @@ struct response_info *parser_response(struct request_info *request,
 
     else if (strcasecmp(request->version, "HTTP/1.1") != 0)
     {
-        printf("%s\n", request->version);
         response_info->statuscode = "505";
         statuscode = "505 HTTP Version Not Supported\n";
     }
@@ -48,7 +47,6 @@ struct response_info *parser_response(struct request_info *request,
         strcat(path, request->target);
         response_info->path = path;
 
-        printf("%s", path);
         // test de d'accessibilite de droit d'ouverture de fichier
         int correctfile = access(path, R_OK);
         if (correctfile == 0)

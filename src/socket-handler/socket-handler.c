@@ -1,10 +1,15 @@
 #define _POSIX_C_SOURCE 200112L
 #include "socket-handler.h"
+
 // GET src/main.c HTTP/1.1
+// GEt HTTP/1.1
+// HEAD src/main.c HTTP/1.1
+// Head HTTP/1.1
 
 static volatile bool runserver = true;
-#define MAX_EVENT 10000
-int create_and_bind(char *ip, char *port)
+#define BUFFER_SIZE 32000
+
+static int create_and_bind(char *ip, char *port)
 {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -37,7 +42,8 @@ int create_and_bind(char *ip, char *port)
     return sockfd;
 }
 
-size_t get_index_from_buff(size_t begin, size_t end, char *buff, char delim)
+static size_t get_index_from_buff(size_t begin, size_t end, char *buff,
+                                  char delim)
 {
     for (size_t i = begin; i < end; i++)
     {
@@ -48,19 +54,39 @@ size_t get_index_from_buff(size_t begin, size_t end, char *buff, char delim)
     return end;
 }
 
-void signal_handler_term(int sig)
+static void signal_handler_term(int sig)
 {
     // useless operation == (void) sig
     sig++;
     runserver = false;
 }
 
-void setnonblocking(int fd)
+static char *recv_data(int socket, char *buffer)
 {
-    int old_option = fcntl(fd, F_GETFL);
-    int new_option = old_option | O_NONBLOCK;
+    size_t total_read = 0;
+    ssize_t nb_read = 0;
+    while ((nb_read =
+                recv(socket, buffer + total_read, BUFFER_SIZE - total_read, 0))
+           > 0)
+    {
+        size_t index =
+            get_index_from_buff(total_read, total_read + nb_read, buffer, '\n');
 
-    fcntl(fd, F_SETFL, new_option);
+        if (index != total_read + nb_read)
+        {
+            total_read = index;
+            break;
+        }
+        total_read += nb_read;
+    }
+
+    return buffer;
+
+    if (nb_read == -1)
+    {
+        close(socket);
+        return NULL;
+    }
 }
 
 int socket_handler(char *ip, char *port, struct servconfig *server)
@@ -68,125 +94,71 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
     // signal handler
     signal(SIGTERM, signal_handler_term);
 
-    printf("\n+++++++ Waiting for new connection ++++++++\n\n");
-
+    // printf("\n+++++++ Waiting for new connection ++++++++\n\n");
     int listening_sock = create_and_bind(ip, port);
 
     if (listening_sock == -1)
         return 2;
 
-    setnonblocking(listening_sock);
-
     if (listen(listening_sock, 30) == -1)
-        return 2;
-
-    //	creation of epoll_instance
-    struct epoll_event event;
-    struct epoll_event events[MAX_EVENT];
-
-    int fd_server = 0;
-
-    int epoll_fd = epoll_create1(0);
-
-    if (epoll_fd == -1)
-        return 2;
-
-    event.events = EPOLLIN | EPOLLOUT | EPOLLET;
-    event.data.fd = fd_server;
-
-    // add server to interrest list
-    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd_server, &event) == -1)
         return 2;
 
     while (runserver)
     {
-        // gestion de la liste d'interet
-        int clientready = epoll_wait(epoll_fd, events, MAX_EVENT, -1);
-        if (clientready == -1)
-            return 2;
+        int client_socket = accept(listening_sock, NULL, NULL);
+        if (client_socket == -1)
+            continue;
 
-        for (int i = 0; i < clientready; i++)
+        char *bufferstatusline = malloc(BUFFER_SIZE);
+        bufferstatusline = recv_data(client_socket, bufferstatusline);
+
+        char *bufferheader = malloc(BUFFER_SIZE);
+        bufferheader = recv_data(client_socket, bufferheader);
+
+        // printf("%s\n%s", bufferstatusline, bufferheader);
+
+        struct request_info *request_info =
+            parser_request(bufferstatusline, server->vhosts);
+
+        if (server->global.log)
         {
-            if (events[i].data.fd == listening_sock)
-            {
-                int client_socket = accept(listening_sock, NULL, NULL);
-                if (client_socket == -1)
-                    continue;
+            // log de la request
+            log_request(server->vhosts->servername, request_info, ip,
+                        server->global.logfile);
 
-                // Ajout du client dans la liste d'interet
-                if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_socket, &event)
-                    == -1)
-                    return 2;
-            }
-            else
-            {
-                ssize_t nb_read;
-                size_t nb_sent;
-                size_t total_sent = 0;
-                size_t total_read = 0;
-                char buff[1024];
-
-                while (true)
-                {
-                    nb_read =
-                        recv(events[i].data.fd, buff + total_read, 1024, 0);
-                    if (nb_read == -1)
-                    {
-                        if (errno == EAGAIN || errno == EWOULDBLOCK)
-                            break;
-                        else
-                        {
-                            close(events[i].data.fd);
-                            continue;
-                        }
-                    }
-                }
-
-                struct request_info *request_info =
-                    parser_request(buff, server->vhosts);
-
-                event.events = EPOLLOUT;
-
-                if (server->global.log)
-                {
-                    // log de la request
-                    log_request(server->vhosts->servername, request_info, ip,
-                                server->global.logfile);
-
-                    // log de la reponse
-                    log_response(server->vhosts->servername, "400", ip,
-                                 request_info, server->global.logfile);
-                }
-
-                struct response_info *response_info =
-                    parser_response(request_info, server->vhosts);
-
-                size_t lenbuff = strlen(response_info->statusline);
-
-                while ((nb_sent = send(events[i].data.fd,
-                                       response_info->statusline + total_sent,
-                                       lenbuff - total_sent, MSG_NOSIGNAL))
-                       > 0)
-                {
-                    total_sent += nb_sent;
-                }
-
-                if (strcasecmp(request_info->method, "GET") == 0
-                    && strcasecmp(response_info->statuscode, "200") == 0)
-                {
-                    int fd = open(response_info->path, O_RDONLY);
-                    if (fd == -1)
-                        return 2;
-
-                    sendfile(events[i].data.fd, fd, 0, 100000);
-                    close(fd);
-                }
-                close(events[i].data.fd);
-            }
+            // log de la reponse
+            log_response(server->vhosts->servername, "400", ip, request_info,
+                         server->global.logfile);
         }
+
+        struct response_info *response_info =
+            parser_response(request_info, server->vhosts);
+
+        size_t lenbuff = strlen(response_info->statusline);
+        size_t nb_sent;
+        size_t total_sent = 0;
+        while ((nb_sent =
+                    send(client_socket, response_info->statusline + total_sent,
+                         lenbuff - total_sent, MSG_NOSIGNAL))
+               > 0)
+        {
+            total_sent += nb_sent;
+        }
+
+        if (strcasecmp(request_info->method, "GET") == 0
+            && strcasecmp(response_info->statuscode, "200") == 0)
+        {
+            int fd = open(response_info->path, O_RDONLY);
+            if (fd == -1)
+                return 2;
+
+            sendfile(client_socket, fd, 0, 100000);
+
+            close(fd);
+        }
+
+        close(client_socket);
     }
     free_server(server);
-
-    close(epoll_fd);
     return 0;
 }

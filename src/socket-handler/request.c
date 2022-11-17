@@ -12,9 +12,9 @@ struct request_info *parser_request(char *buffer, struct vhost *vhost)
     request_info->target = malloc(MAX_SIZE);
     request_info->version = malloc(MAX_SIZE);
 
-    char *method = strtok(buffer, " ");
-    char *target = strtok(buffer, " ");
-    char *version = strtok(buffer, " \n");
+    char *method = strtok(buffer, " \n");
+    char *target = strtok(NULL, " \n");
+    char *version = strtok(NULL, " \n");
 
     if (!version)
     {

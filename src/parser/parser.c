@@ -1,9 +1,10 @@
-#define _GNU_SOURCE
 #include "parser.h"
 
 #define SIZE 100
-struct servconfig **get_global_tag_value(char *line, struct servconfig **server,
-                                         struct returntype *returntype)
+
+static struct servconfig **get_global_tag_value(char *line,
+                                                struct servconfig **server,
+                                                struct returntype *returntype)
 {
     char *tmpchar = strtok_r(line, " =", &line);
     char *var = strtok_r(NULL, "= \n", &line);
@@ -32,8 +33,8 @@ struct servconfig **get_global_tag_value(char *line, struct servconfig **server,
     return server;
 }
 
-void get_vhost_tag_value(char *line, struct vhost **vhost,
-                         struct returntype *returntype)
+static void get_vhost_tag_value(char *line, struct vhost **vhost,
+                                struct returntype *returntype)
 {
     char *tmpchar = strtok_r(line, " =", &line);
     char *var = strtok_r(NULL, "= \n", &line);
@@ -66,7 +67,7 @@ void get_vhost_tag_value(char *line, struct vhost **vhost,
     // return vhost;
 }
 
-struct returntype checking(struct servconfig *server)
+static struct returntype checking(struct servconfig *server)
 {
     struct returntype returntype;
     returntype.value = 2;
@@ -172,7 +173,7 @@ struct returntype parser(char const *path, struct servconfig **server)
         if (strcasecmp(tmpchar, "vhosts") != 0)
         {
             returntype.value = 2;
-            printf("%s", line);
+            // printf("%s", line);
 
             returntype.message =
                 "erreur lors du parsing du fichier de configuration : vhosts";
