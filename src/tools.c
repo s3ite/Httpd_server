@@ -20,7 +20,7 @@ void log_request(char *servname, struct request_info *request_info,
     else
         file = stdout;
 
-    fprintf(file, "%s [%s] received %s on %s from %s\n", date, servname,
+    fprintf(file, "%s [%s] received %s on '%s' from %s\n", date, servname,
             request_info->method, request_info->target, clientip);
 
     if (path)
@@ -51,4 +51,28 @@ void log_response(char *servname, char *statuscode, char *clientip,
 
     if (path)
         fclose(file);
+}
+
+void print_config_parameter(struct servconfig *server)
+{
+    printf("\n\tGLOBAL\n");
+    printf("logfile : %s\n", server->global.logfile);
+
+    printf("log : %s\n", server->global.log ? "true" : "false");
+
+    if (server->global.pidfile[0] != '\0')
+        printf("pidfile : %s\n", server->global.pidfile);
+
+    for (struct vhost *index = server->vhosts; index; index = index->next)
+    {
+        printf("\n\tVHOSTS\n");
+        printf("servername : %s\n", index->servername);
+        printf("rootdir : %s\n", index->rootdir);
+
+        if (index->defaultfile)
+            printf("defaultfile : %s\n", index->defaultfile);
+
+        printf("ip : %s\n", index->ip);
+        printf("port : %s\n", index->port);
+    }
 }

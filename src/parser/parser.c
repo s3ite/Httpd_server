@@ -50,7 +50,6 @@ static void get_vhost_tag_value(char *line, struct vhost **vhost,
 
     else if (strcasecmp(tmpchar, "default_file") == 0)
     {
-        //(*vhost)->defaultfile = malloc(SIZE);
         (*vhost)->defaultfile =
             var ? strcpy((*vhost)->defaultfile, var) : "index.html";
     }
@@ -112,37 +111,48 @@ static struct returntype checking(struct servconfig *server)
     return returntype;
 }
 
+static struct vhost **set_index(struct vhost **index)
+{
+    *index = malloc(sizeof(struct vhost));
+    (*index)->servername = malloc(SIZE);
+    (*index)->rootdir = malloc(SIZE);
+    (*index)->defaultfile = malloc(SIZE);
+    ;
+    (*index)->ip = malloc(SIZE);
+    (*index)->port = malloc(SIZE);
+    (*index)->next = NULL;
+
+    return index;
+}
+
 struct returntype parser(char const *path, struct servconfig **server)
 {
     struct returntype returntype = { .message = NULL, .value = 0 };
-
     if (!*server)
         *server = init_config();
+
+    if (path)
+        // strcpy((*server)->global.path, path);
+
+        if (!path)
+            path = (*server)->global.path;
 
     FILE *stream = NULL;
     char *line = NULL;
     char *tmpchar = NULL;
-
     size_t len = 0;
     ssize_t nread = 0;
 
-    // impossiblite d'ouverture du fichier
     stream = fopen(path, "r");
     if (stream == NULL)
-    {
         returntype.value = 2;
-        returntype.message = "erreur d'ouverture du fichier de configuration";
-    }
 
-    // parsing du tag global
     nread = getline(&line, &len, stream);
     tmpchar = strtok(line, "[ ]");
 
     if (strcasecmp(tmpchar, "global") != 0)
     {
         returntype.value = 2;
-        returntype.message =
-            "erreur lors du parsing du fichier de configuration : global";
         return returntype;
     }
 
@@ -152,32 +162,16 @@ struct returntype parser(char const *path, struct servconfig **server)
     struct vhost **index = NULL;
     index = &((*server)->vhosts);
 
-    // saut de la ligne de separation
     nread = getline(&line, &len, stream);
     while (line)
     {
         if (!(*index))
-        {
-            *index = malloc(sizeof(struct vhost));
-            (*index)->servername = malloc(SIZE);
-            (*index)->rootdir = malloc(SIZE);
-            (*index)->defaultfile = NULL;
-            (*index)->ip = malloc(SIZE);
-            (*index)->port = malloc(SIZE);
-            (*index)->next = NULL;
-        }
+            index = set_index(index);
 
         tmpchar = strtok(line, "[ ]");
-
-        // parsing du tag vhosts
         if (strcasecmp(tmpchar, "vhosts") != 0)
         {
             returntype.value = 2;
-            // printf("%s", line);
-
-            returntype.message =
-                "erreur lors du parsing du fichier de configuration : vhosts";
-
             return returntype;
         }
 
@@ -188,19 +182,14 @@ struct returntype parser(char const *path, struct servconfig **server)
         nread = getline(&line, &len, stream);
         if (nread == -1)
             break;
-
         index = &((*index)->next);
     }
 
-    // mandatory checking
     returntype = checking(*server);
     if (returntype.value == 2)
         return returntype;
 
-    returntype.message = "Parsing done well";
-
     free(line);
     fclose(stream);
-
     return returntype;
 }

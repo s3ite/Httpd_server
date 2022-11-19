@@ -1,17 +1,43 @@
 #define _XOPEN_SOURCE
 #include "daemon-control.h"
 
-void start_server(struct servconfig *server)
+static size_t get_pid(struct servconfig *server)
 {
-    // for (struct vhost *index = server->vhosts; index; index = index->next)
+    size_t pid = 0;
+    FILE *file = fopen(server->global.pidfile, "r");
+    if (file)
+    {
+        char buffer[15] = { '\0' };
+        if (fgets(buffer, 7, file))
+            pid = strtol(buffer, NULL, 10);
+        fclose(file);
+    }
 
-    socket_handler(server->vhosts->ip, server->vhosts->port, server);
+    return pid;
+}
+size_t start_server(struct servconfig *server)
+{
+    size_t pid = get_pid(server);
+    if (pid > 0)
+        return 1;
+
+    FILE *pidfile = fopen(server->global.pidfile, "a");
+    if (pidfile)
+    {
+        fprintf(pidfile, "%d\n", getpid());
+        fclose(pidfile);
+
+        socket_handler(server->vhosts->ip, server->vhosts->port, server);
+    }
+
+    return 0;
 }
 
 void free_server(struct servconfig *server)
 {
     free(server->global.logfile);
     free(server->global.pidfile);
+    free(server->global.path);
 
     for (struct vhost *index = server->vhosts; index;)
     {
@@ -30,33 +56,31 @@ void free_server(struct servconfig *server)
 }
 void stop_server(struct servconfig *server)
 {
-    // Recuperation et arret du serveur
-    FILE *file = fopen(server->global.pidfile, "r");
+    int pid = get_pid(server);
+
+    if (pid > 0)
+        kill(pid, SIGKILL);
+
+    if (server->global.logfile)
+        remove(server->global.logfile);
+    if (server->global.pidfile)
+        remove(server->global.pidfile);
+}
+static struct returntype reload_server(struct servconfig **server)
+{
+    struct returntype returntype;
+    FILE *file = fopen((*server)->global.pidfile, "r");
     if (file)
     {
         char buffer[15];
         while ((fgets(buffer, 7, file)) != NULL)
         {
             buffer[6] = '\0';
-
-            // need to be change to SIGTERM
-            kill(strtol(buffer, NULL, 10), SIGKILL);
+            kill(strtol(buffer, NULL, 10), SIGCONT);
         }
-
-        if (server->global.logfile)
-            remove(server->global.logfile);
-        if (server->global.pidfile)
-            remove(server->global.pidfile);
+        returntype.value = 0;
         fclose(file);
     }
-}
-static struct returntype reload_server(struct servconfig **server)
-{
-    struct returntype returntype;
-    (void)server;
-    returntype.message = "server launch perfectly";
-    returntype.value = 0;
-
     return returntype;
 }
 static void restart_server(struct servconfig **server)
@@ -74,16 +98,17 @@ struct returntype daemon_control(struct servconfig **server,
 
     if (strcasecmp(command, "start") == 0)
     {
+        size_t pid = get_pid(*server);
+        if (pid > 0)
+        {
+            returntype.value = 1;
+            return returntype;
+        }
+
         pid_t childpid = fork();
 
         if (childpid == 0)
             start_server(*server);
-
-        else
-        {
-            FILE *pidfile = fopen((*server)->global.pidfile, "a");
-            fprintf(pidfile, "%d\n", childpid);
-        }
 
         return returntype;
     }
@@ -100,10 +125,7 @@ struct returntype daemon_control(struct servconfig **server,
         free_server(*server);
     }
     else if (strcasecmp(command, "restart") == 0)
-    {
         restart_server(server);
-        free_server(*server);
-    }
 
     return returntype; // will never be reached
 }

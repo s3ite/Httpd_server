@@ -17,6 +17,7 @@ struct global
     char *logfile;
     bool log;
     char *pidfile;
+    char *path;
 };
 
 /*
@@ -46,7 +47,7 @@ struct servconfig
     struct vhost *vhosts;
 };
 
-struct servconfig *init_config(void);
+struct servconfig *init_config();
 
 void print_config_parameter(struct servconfig *server);
 

@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include "../daemon-control/daemon-control.h"
+#include "../event-handler/event-handler.h"
 #include "../tools.h"
 #include "config-manager.h"
 #include "response.h"

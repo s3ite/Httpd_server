@@ -55,7 +55,6 @@ static size_t get_index_from_buff(size_t begin, size_t end, char *buff,
 
 static void signal_handler_term(int sig)
 {
-    // useless operation == (void) sig
     sig++;
     runserver = false;
 }
@@ -90,13 +89,12 @@ static char *recv_data(int socket, char *buffer)
 
 int socket_handler(char *ip, char *port, struct servconfig *server)
 {
-    // signal handler
+    signal(SIGTSTP, signal_handler_term);
+    signal(SIGINT, signal_handler_term);
     signal(SIGTERM, signal_handler_term);
-
-    // printf("\n+++++++ Waiting for new connection ++++++++\n\n");
+    signal(SIGCONT, reload_signal_handler);
 
     int listening_sock = create_and_bind(ip, port);
-
     if (listening_sock == -1)
         return 2;
 
@@ -112,21 +110,20 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
         char *bufferstatusline = malloc(BUFFER_SIZE);
         bufferstatusline = recv_data(client_socket, bufferstatusline);
 
-        // char *bufferheader = malloc(BUFFER_SIZE);
-        // bufferheader = recv_data(client_socket, bufferheader);
-
-        // printf("%s\n%s", bufferstatusline, bufferheader);
-
         struct request_info *request_info =
             parser_request(bufferstatusline, server->vhosts);
 
+        if (!request_info)
+        {
+            close(client_socket);
+            free_server(server);
+        }
+
         if (server->global.log)
         {
-            // log de la request
             log_request(server->vhosts->servername, request_info, ip,
                         server->global.logfile);
 
-            // log de la reponse
             log_response(server->vhosts->servername, "400", ip, request_info,
                          server->global.logfile);
         }
@@ -135,15 +132,13 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
             parser_response(request_info, server->vhosts);
 
         size_t lenbuff = strlen(response_info->statusline);
-        size_t nb_sent;
+        size_t sent;
         size_t total_sent = 0;
-        while ((nb_sent =
-                    send(client_socket, response_info->statusline + total_sent,
+        while (
+            (sent = send(client_socket, response_info->statusline + total_sent,
                          lenbuff - total_sent, MSG_NOSIGNAL))
-               > 0)
-        {
-            total_sent += nb_sent;
-        }
+            > 0)
+            total_sent += sent;
 
         if (strcasecmp(request_info->method, "GET") == 0
             && strcasecmp(response_info->statuscode, "200") == 0)
@@ -152,11 +147,9 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
             if (fd == -1)
                 return 2;
 
-            sendfile(client_socket, fd, 0, 100000);
-
+            sendfile(client_socket, fd, 0, 100000000);
             close(fd);
         }
-
         close(client_socket);
     }
     free_server(server);

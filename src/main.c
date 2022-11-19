@@ -2,76 +2,55 @@
 
 struct servconfig *server = NULL;
 
-void signal_handler_int(int sig)
-{
-    sig++;
-    stop_server(server);
-    free_server(server);
-}
-
 int main(int argc, char const *argv[])
 {
-    signal(SIGINT, signal_handler_int);
-
     const char *path = argv[argc - 1];
-    const char *command;
+    const char *command = argv[1];
     bool launchdaemon = false;
     struct returntype returntype;
 
-    int pathtest = access(path, R_OK);
-    if (pathtest != 0)
+    struct stat st;
+    int correctfile = stat(path, &st);
+    if (correctfile != 0)
         return 2;
 
-    // Dry run
+    returntype = parser(path, &server);
+    if (returntype.value != 0)
+        return returntype.value;
+
     if (strcasecmp(argv[1], "--dry-run") == 0)
     {
-        path = argv[argc - 1];
-        returntype = parser(path, &server);
-
         if (returntype.value == 0)
-        {
-            print_config_parameter(server);
-            // printf("%s\n", returntype.message);
-        }
+            return 0;
         else
-            errx(returntype.value, "%s", returntype.message);
-        return returntype.value;
+            return 2;
     }
+
+    if (returntype.value != 0)
+        return 2;
 
     if (strcasecmp(argv[1], "-a") == 0)
     {
         launchdaemon = true;
         command = argv[2];
-    }
 
-    else
-        command = argv[1];
-
-    if (strcasecmp(command, "start") != 0 && strcasecmp(command, "stop") != 0
-        && strcasecmp(command, "reload") != 0
-        && strcasecmp(command, "restart") != 0)
-        errx(2, "invalid argument : command");
-    else
-    {
-        returntype = parser(path, &server);
-
-        if (returntype.value != 0)
-            return returntype.value;
+        if (strcasecmp(command, "start") != 0
+            && strcasecmp(command, "stop") != 0
+            && strcasecmp(command, "reload") != 0
+            && strcasecmp(command, "restart") != 0)
+            return 2;
 
         if (strcasecmp(command, "restart") == 0)
         {
             stop_server(server);
-            returntype = parser(path, &server);
-            if (returntype.value != 0)
-                return returntype.value;
             command = "start";
         }
-        if (launchdaemon)
-            daemon_control(&server, command);
-
-        else
-            start_server(server);
     }
 
-    return 0;
+    if (launchdaemon == true)
+        returntype = daemon_control(&server, command);
+    else
+        returntype.value = start_server(server);
+
+    return returntype.value == 1 ? returntype.value : 0;
 }

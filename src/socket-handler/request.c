@@ -33,8 +33,5 @@ struct request_info *parser_request(char *buffer, struct vhost *vhost)
         || !request_info->target)
         return NULL;
 
-    // printf("%s\n", request_info->method);
-    // printf("%s\n", request_info->target);
-    // printf("%s\n", request_info->version);
     return request_info;
 }

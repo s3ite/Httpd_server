@@ -5,10 +5,12 @@
 #include <errno.h>
 #include <stdio.h>
 #include <strings.h>
+#include <sys/stat.h>
 
 #include "daemon-control/daemon-control.h"
 #include "event-handler/event-handler.h"
 #include "parser/parser.h"
 #include "socket-handler/config-manager.h"
 #include "tools.h"
+
 #endif /* MAIN_H */
