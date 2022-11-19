@@ -7,13 +7,15 @@ SRC = $(OTHER) $(DAEMON) $(HANDLER)/config-manager.c  $(HANDLER)/request.c $(HAN
 CFLAGS =-Wall -std=c99 -pedantic -Werror -Wall -Wextra -Wvla -fsanitize=address -g
 
 all :
-	$(CC) $(CFLAGS) $(SRC) -o httpd
-
-httpd:
 	reset
 	clang-format -i src/*/*.c src/*.c src/*/*.h src/*.h
+	$(CC) $(CFLAGS) $(SRC) -o httpd
 	./httpd -a stop tests/test.conf
 	./httpd -a start tests/test.conf
+	
+
+httpd:
+	$(CC) $(CFLAGS) $(SRC) -o httpd
 
 check:
 	reset
@@ -25,4 +27,4 @@ check:
        
 .PHONY : clean 
 clean : 
-	rm -f test *~
+	rm -f test  httpd *~

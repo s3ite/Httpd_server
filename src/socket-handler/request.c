@@ -12,9 +12,9 @@ struct request_info *parser_request(char *buffer, struct vhost *vhost)
     request_info->target = malloc(MAX_SIZE);
     request_info->version = malloc(MAX_SIZE);
 
-    char *method = strtok(buffer, " \n");
-    char *target = strtok(NULL, " \n");
-    char *version = strtok(NULL, " \n");
+    char *method = strtok(buffer, "' \r\n");
+    char *target = strtok(NULL, "' \r\n");
+    char *version = strtok(NULL, "' \r\n");
 
     if (!version)
     {
@@ -33,5 +33,8 @@ struct request_info *parser_request(char *buffer, struct vhost *vhost)
         || !request_info->target)
         return NULL;
 
+    // printf("%s\n", request_info->method);
+    // printf("%s\n", request_info->target);
+    // printf("%s\n", request_info->version);
     return request_info;
 }

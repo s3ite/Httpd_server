@@ -5,7 +5,6 @@
 // GEt HTTP/1.1
 // HEAD src/main.c HTTP/1.1
 // Head HTTP/1.1
-
 static volatile bool runserver = true;
 #define BUFFER_SIZE 32000
 
@@ -95,6 +94,7 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
     signal(SIGTERM, signal_handler_term);
 
     // printf("\n+++++++ Waiting for new connection ++++++++\n\n");
+
     int listening_sock = create_and_bind(ip, port);
 
     if (listening_sock == -1)
@@ -112,8 +112,8 @@ int socket_handler(char *ip, char *port, struct servconfig *server)
         char *bufferstatusline = malloc(BUFFER_SIZE);
         bufferstatusline = recv_data(client_socket, bufferstatusline);
 
-        char *bufferheader = malloc(BUFFER_SIZE);
-        bufferheader = recv_data(client_socket, bufferheader);
+        // char *bufferheader = malloc(BUFFER_SIZE);
+        // bufferheader = recv_data(client_socket, bufferheader);
 
         // printf("%s\n%s", bufferstatusline, bufferheader);
 
